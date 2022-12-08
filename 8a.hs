@@ -18,6 +18,9 @@ findDirections (w, h) (a, b) = [left, right, top, bottom]
 unsafeLookup :: Map.Map Coords Int -> Coords -> Int
 unsafeLookup m i = fromJust $ Map.lookup i m
 
+allTrees :: Coords -> [Coords]
+allTrees coords = [(x,y) | x <- [1..(fst coords)], y <- [1..(snd coords)]] 
+
 isVisible :: TreeHashmap -> Coords -> Bool
 isVisible (m,size) from = any visible directions
     where height = unsafeLookup m from
@@ -35,19 +38,15 @@ scenicScore (m,size) from = product $ map visible directions
           visible = (length) . (takeWhileVisibleFrom height) . (map $ unsafeLookup m)
           directions = findDirections size from
 
-allTrees :: Coords -> [Coords]
-allTrees coords = [(x,y) | x <- [1..(fst coords)], y <- [1..(snd coords)]] 
+countAllVisible :: TreeHashmap -> Int
+countAllVisible m = length $ filter (isVisible m) (allTrees $ snd m)
 
-countAllVisible :: [String] -> Int
-countAllVisible l = length $ filter (isVisible forestMap) (allTrees $ snd forestMap)
-    where forestMap = mapTrees l
-
-findMaxScenicScore :: [String] -> Int
-findMaxScenicScore l = maximum $ map (scenicScore forestMap) (allTrees $ snd forestMap)
-    where forestMap = mapTrees l
+findMaxScenicScore :: TreeHashmap -> Int
+findMaxScenicScore m = maximum $ map (scenicScore m) (allTrees $ snd m)
 
 main :: IO ()
 main = do
     content <- readFile "8.txt"
-    putStrLn $ show $ countAllVisible $ lines content
-    putStrLn $ show $ findMaxScenicScore $ lines content
+    let forestMap = mapTrees $ lines content
+    putStrLn $ show $ countAllVisible forestMap
+    putStrLn $ show $ findMaxScenicScore forestMap
