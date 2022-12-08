@@ -5,19 +5,23 @@ type Coords = (Int, Int);
 type TreeHashmap = (Map.Map Coords Int, Coords);
 
 mapTrees :: [String] -> TreeHashmap
-mapTrees input = (Map.fromList $ foldl (++) [] $ map (\(i,row) -> map (\(j,char) -> ((i, j), read [char])) (zip [1..] row)) $ zip [1..] input, (length input, length $ head input))
+mapTrees input = (Map.fromList $ foldl (++) [] $ map (\(i,row) -> map (\(j,char) -> ((i, j), read [char])) (zip [1..] row)) $ zip [1..] input, size)
+    where size = (length input, length $ head input)
 
 findDirections :: Coords -> Coords -> [[Coords]]
 findDirections (w, h) (a, b) = [left, right, top, bottom]
-    where left = map (\i -> (i, b)) $ reverse [1..(a-1)]
-          right = map (\i -> (i, b)) [(a+1)..w]
-          top = map (\i -> (a, i)) $ reverse [1..(b-1)]
-          bottom = map (\i -> (a, i)) [(b+1)..h]
+    where left = map (,b) $ reverse [1..(a-1)]
+          right = map (,b) [(a+1)..w]
+          top = map (a,) $ reverse [1..(b-1)]
+          bottom = map (a,) [(b+1)..h]
+
+unsafeLookup :: Map.Map Coords Int -> Coords -> Int
+unsafeLookup m i = fromJust $ Map.lookup i m
 
 isVisible :: TreeHashmap -> Coords -> Bool
-isVisible (m,size) from = foldl (||) False (map visible directions)
-    where height = fromJust $ Map.lookup from m
-          visible = all (<height) . (map (\i -> fromJust $ Map.lookup i m))
+isVisible (m,size) from = any visible directions
+    where height = unsafeLookup m from
+          visible = all (<height) . (map $ unsafeLookup m)
           directions = findDirections size from
 
 takeWhileVisibleFrom :: Int -> [Int] -> [Int]
@@ -26,9 +30,9 @@ takeWhileVisibleFrom h (x:xs) | x < h = x : takeWhileVisibleFrom h xs
 takeWhileVisibleFrom h (x:xs) | x >= h = [x]
 
 scenicScore :: TreeHashmap -> Coords -> Int
-scenicScore (m,size) from = foldl (*) 1 (map visible directions)
-    where height = fromJust $ Map.lookup from m
-          visible = (length) . (takeWhileVisibleFrom height) . (map (\i -> fromJust $ Map.lookup i m))
+scenicScore (m,size) from = product $ map visible directions
+    where height = unsafeLookup m from
+          visible = (length) . (takeWhileVisibleFrom height) . (map $ unsafeLookup m)
           directions = findDirections size from
 
 allTrees :: Coords -> [Coords]
@@ -39,7 +43,7 @@ countAllVisible l = length $ filter (isVisible forestMap) (allTrees $ snd forest
     where forestMap = mapTrees l
 
 findMaxScenicScore :: [String] -> Int
-findMaxScenicScore l = foldl max 0 $ map (scenicScore forestMap) (allTrees $ snd forestMap)
+findMaxScenicScore l = maximum $ map (scenicScore forestMap) (allTrees $ snd forestMap)
     where forestMap = mapTrees l
 
 main :: IO ()
