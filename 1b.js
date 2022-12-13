@@ -1,9 +1,8 @@
-import fetch from 'file-fetch';
-
 const sum = a => a.reduce((a, b) => a + b, 0)
 
-const request = await fetch("./1.txt");
-const text = await request.text();
+const fs = require('fs');
+const text = fs.readFileSync('./1.txt', 'utf8');
+
 console.log(sum(text.split("\n\n").reduce((bestElves, elf) => {
     const currentElfSum = sum(elf.split("\n").map(Number));
     return [

@@ -1,7 +1,5 @@
-import fetch from 'file-fetch';
-
-const request = await fetch("./2.txt");
-const text = await request.text();
+const fs = require('fs');
+const text = fs.readFileSync('./2.txt', 'utf8');
 
 console.log(text.split("\n").reduce((score, round) => {
     const [a, x] = round.split(' ');

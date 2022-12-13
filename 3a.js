@@ -1,7 +1,5 @@
-import fetch from 'file-fetch';
-
-const request = await fetch("./3.txt");
-const text = await request.text();
+const fs = require('fs');
+const text = fs.readFileSync('./3.txt', 'utf8');
 
 console.log(
     text.split("\n").reduce((sum, backpack) => {
