@@ -1,6 +1,6 @@
 import Data.Maybe (catMaybes, fromJust)
 import Data.Char (ord)
-import Data.List (sortBy, permutations, nub, inits, sortOn, delete)
+import Data.List (nub, sortOn, delete, subsequences, (\\))
 import Data.Ord (comparing)
 import qualified Data.Map as Map
 
@@ -48,11 +48,23 @@ evaluate pathCache f l start valves = maximum $ map (\v -> evaluateHead+(evaluat
     where evaluateHead = l * (findFlow f start)
           evaluateTail = \v -> evaluate pathCache f (l - 1 - (findCache pathCache (start, v))) v (delete v valves)
 
+part1 :: PathCache -> FlowMap -> Valve -> Int
+part1 pathCache flowMap initialValve = evaluate pathCache flowMap rounds initialValve (usefulValves flowMap)
+    where rounds = 30
+
+part2 :: PathCache -> FlowMap -> Valve -> Int
+part2 pathCache flowMap initialValve = maximum $ map (\(a,b) -> eval a + eval b) pairs
+    where rounds = 26
+          useful = usefulValves flowMap
+          pairs = map (\s -> (s, useful \\ s)) (subsequences useful)
+          eval = \s -> evaluate pathCache flowMap rounds initialValve (s)
+
 main = do
     content <- readFile "16.txt"
     let (inputMap, flowMap) = parseInputs content
     let valves = initialValve:(usefulValves flowMap);
     let pathCache = Map.fromList [((x, y), findPath inputMap x y) | x <- valves, y <- valves]
-    let mostPressure = evaluate pathCache flowMap 30 initialValve (usefulValves flowMap)
-    putStrLn $ show mostPressure
+    -- part (a)
+    -- putStrLn $ show $ part1 pathCache flowMap initialValve
+    putStrLn $ show $ part2 pathCache flowMap initialValve
     where initialValve = "AA"
